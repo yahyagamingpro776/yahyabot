@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>مولّد صور الأخبار الرياضية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&family=Almarai:wght@400;700;800&family=Noto+Kufi+Arabic:wght@400;600;700;800;900&family=Readex+Pro:wght@400;600;700;800&family=IBM+Plex+Sans+Arabic:wght@400;600;700&family=Reem+Kufi:wght@400;500;600;700&family=Lateef:wght@400;700&family=Scheherazade+New:wght@400;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #cc0000;
+    --red-dark: #990000;
+    --red-bright: #e60000;
+    --gold: #d4a843;
+    --white: #ffffff;
+    --gray-light: #f2f2f2;
+  }
+
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: #111;
+    color: #222;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* ===== HEADER ===== */
+  .app-header {
+    background: linear-gradient(135deg, #990000, #cc0000, #ff1a1a);
+    padding: 14px 16px 12px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.5);
+  }
+  .app-header h1 {
+    color: #fff;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .app-header p {
+    color: rgba(255,255,255,0.75);
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  /* ===== MAIN LAYOUT ===== */
+  .app-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ===== CONTROLS PANEL ===== */
+  .controls {
+    background: #1a1a1a;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .section-label {
+    color: #aaa;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  /* Upload buttons */
+  .upload-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .upload-btn {
+    background: #2a2a2a;
+    border: 2px dashed #444;
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-btn:active { transform: scale(0.97); }
+  .upload-btn.has-image { border-color: var(--red); border-style: solid; background: #2a0000; }
+  .upload-btn .icon { font-size: 24px; display: block; margin-bottom: 4px; }
+  .upload-btn .label { color: #ccc; font-size: 11px; font-weight: 600; display: block; }
+  .upload-btn.has-image .label { color: #ff6666; }
+  .upload-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+
+  /* Text area */
+  .news-input {
+    background: #2a2a2a;
+    border: 2px solid #333;
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: #fff;
+    font-family: 'Cairo', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    resize: none;
+    min-height: 90px;
+    width: 100%;
+    outline: none;
+    direction: rtl;
+    line-height: 1.6;
+    transition: border-color 0.2s;
+  }
+  .news-input:focus { border-color: var(--red); }
+  .news-input::placeholder { color: #555; }
+
+  /* Font selector */
+  .font-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .select-styled {
+    flex: 1;
+    background: #2a2a2a;
+    border: 2px solid #333;
+    border-radius: 10px;
+    color: #fff;
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .select-styled:focus { border-color: var(--red); }
+
+  /* Color picker */
+  .color-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .color-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .color-swatch.active { border-color: #fff; transform: scale(1.15); }
+  .color-swatch:active { transform: scale(0.9); }
+  .color-picker-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid #444;
+    background: conic-gradient(red, yellow, green, cyan, blue, magenta, red);
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .color-picker-btn input {
+    position: absolute;
+    inset: -4px;
+    opacity: 0;
+    cursor: pointer;
+    width: 200%;
+    height: 200%;
+  }
+
+  /* Logo position */
+  .logo-pos-row {
+    display: flex;
+    gap: 8px;
+  }
+  .pos-btn {
+    flex: 1;
+    background: #2a2a2a;
+    border: 2px solid #333;
+    border-radius: 10px;
+    color: #aaa;
+    font-family: 'Cairo', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 9px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .pos-btn.active { background: var(--red); border-color: var(--red); color: #fff; }
+  .pos-btn:active { transform: scale(0.97); }
+
+  /* Action buttons */
+  .action-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--red-dark), var(--red-bright));
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 13px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(204,0,0,0.4);
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .btn-primary:active { transform: scale(0.97); box-shadow: none; }
+  .btn-secondary {
+    background: #2a2a2a;
+    color: #ccc;
+    border: 2px solid #444;
+    border-radius: 12px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .btn-secondary:active { transform: scale(0.97); }
+  .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Divider */
+  .divider {
+    height: 4px;
+    background: linear-gradient(90deg, #cc0000, #ff4444, #cc0000);
+  }
+
+  /* ===== PREVIEW SECTION ===== */
+  .preview-section {
+    background: #111;
+    padding: 16px;
+  }
+  .preview-title {
+    color: #888;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-align: center;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  /* The canvas wrapper - centered, fills width */
+  .canvas-wrapper {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+  }
+  #previewCanvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 16px;
+  }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #333;
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 999;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ===== FONT SIZE SLIDER ===== */
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #333;
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--red);
+    cursor: pointer;
+  }
+  .hl-swatch {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .hl-swatch.active { border-color: #fff; transform: scale(1.15); }
+  .hl-swatch:active { transform: scale(0.9); }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>⚽ مولّد صور الأخبار الرياضية</h1>
+  <p>أضف المحتوى وحمّل الصورة بضغطة واحدة</p>
+</div>
+
+<div class="app-body">
+
+  <!-- CONTROLS -->
+  <div class="controls">
+
+    <!-- Upload images -->
+    <div>
+      <div class="section-label">📸 الصور</div>
+      <div class="upload-group">
+        <label class="upload-btn" id="newsImgBtn">
+          <span class="icon">🖼️</span>
+          <span class="label" id="newsImgLabel">صورة الخبر</span>
+          <input type="file" accept="image/*" id="newsImgInput">
+        </label>
+        <label class="upload-btn" id="logoBtn">
+          <span class="icon">🏷️</span>
+          <span class="label" id="logoLabel">الشعار (اختياري)</span>
+          <input type="file" accept="image/*" id="logoInput">
+        </label>
+      </div>
+    </div>
+
+    <!-- News text -->
+    <div>
+      <div class="section-label">📝 نص الخبر</div>
+      <textarea class="news-input" id="newsText" placeholder="اكتب نص الخبر هنا..." rows="3"></textarea>
+    </div>
+
+    <!-- Font selector + text color -->
+    <div>
+      <div class="section-label">🔤 الخط واللون</div>
+      <div class="font-row">
+        <select class="select-styled" id="fontSelect">
+          <option value="Cairo" style="font-family:Cairo">Cairo</option>
+          <option value="Tajawal" style="font-family:Tajawal">Tajawal</option>
+          <option value="Almarai" style="font-family:Almarai">Almarai</option>
+          <option value="Noto Kufi Arabic" style="font-family:'Noto Kufi Arabic'">Noto Kufi</option>
+          <option value="Readex Pro" style="font-family:'Readex Pro'">Readex Pro</option>
+          <option value="IBM Plex Sans Arabic" style="font-family:'IBM Plex Sans Arabic'">IBM Plex Arabic</option>
+          <option value="Reem Kufi" style="font-family:'Reem Kufi'">Reem Kufi</option>
+          <option value="Amiri" style="font-family:Amiri">Amiri</option>
+          <option value="Lateef" style="font-family:Lateef">Lateef</option>
+          <option value="Scheherazade New" style="font-family:'Scheherazade New'">Scheherazade</option>
+        </select>
+      </div>
+      <div class="color-row" style="margin-top:10px">
+        <div class="color-swatch active" style="background:#1a1a1a" data-color="#1a1a1a"></div>
+        <div class="color-swatch" style="background:#ffffff" data-color="#ffffff"></div>
+        <div class="color-swatch" style="background:#cc0000" data-color="#cc0000"></div>
+        <div class="color-swatch" style="background:#d4a843" data-color="#d4a843"></div>
+        <div class="color-swatch" style="background:#0055aa" data-color="#0055aa"></div>
+        <div class="color-swatch" style="background:#007700" data-color="#007700"></div>
+        <div class="color-picker-btn" title="لون مخصص">
+          <input type="color" id="customColor" value="#1a1a1a">
+        </div>
+        <span style="color:#666;font-size:11px;margin-right:auto">لون النص</span>
+      </div>
+    </div>
+
+    <!-- Font size -->
+    <div>
+      <div class="section-label">📐 حجم الخط</div>
+      <input type="range" id="fontSizeSlider" min="20" max="72" value="38">
+    </div>
+
+    <!-- Logo position -->
+    <div>
+      <div class="section-label">📍 موضع الشعار</div>
+      <div class="logo-pos-row">
+        <button class="pos-btn active" data-pos="right">← يمين</button>
+        <button class="pos-btn" data-pos="left">يسار →</button>
+      </div>
+    </div>
+
+    <!-- Top label (like SSC) -->
+    <div>
+      <div class="section-label">🏷️ نص الشريط العلوي (مثل SSC)</div>
+      <textarea class="news-input" id="topLabelText" placeholder="مثال: SSC" rows="1" style="min-height:48px;font-size:13px"></textarea>
+      <div class="font-row" style="margin-top:8px">
+        <select class="select-styled" id="topLabelFont">
+          <option value="Cairo">Cairo</option>
+          <option value="Tajawal">Tajawal</option>
+          <option value="Almarai">Almarai</option>
+          <option value="Noto Kufi Arabic">Noto Kufi</option>
+          <option value="Readex Pro">Readex Pro</option>
+          <option value="IBM Plex Sans Arabic">IBM Plex Arabic</option>
+          <option value="Reem Kufi">Reem Kufi</option>
+        </select>
+        <input type="range" id="topLabelSizeSlider" min="18" max="72" value="32" style="flex:1">
+      </div>
+      <div class="color-row" style="margin-top:8px">
+        <div class="tl-swatch active" style="background:#ffffff;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid #fff;flex-shrink:0" data-color="#ffffff"></div>
+        <div class="tl-swatch" style="background:#1a1a1a;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#1a1a1a"></div>
+        <div class="tl-swatch" style="background:#cc0000;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#cc0000"></div>
+        <div class="tl-swatch" style="background:#d4a843;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#d4a843"></div>
+        <div class="color-picker-btn" title="لون مخصص" style="width:28px;height:28px"><input type="color" id="customTopLabelColor" value="#ffffff"></div>
+        <span style="color:#666;font-size:11px;margin-right:auto">لون النص</span>
+      </div>
+      <div class="color-row" style="margin-top:8px">
+        <div class="tlbg-swatch active" style="background:transparent;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid #fff;flex-shrink:0;outline:1px dashed #555" data-color="transparent"></div>
+        <div class="tlbg-swatch" style="background:#cc0000;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#cc0000"></div>
+        <div class="tlbg-swatch" style="background:#1a1a1a;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#1a1a1a"></div>
+        <div class="tlbg-swatch" style="background:#d4a843;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#d4a843"></div>
+        <div class="tlbg-swatch" style="background:#0055aa;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#0055aa"></div>
+        <div class="color-picker-btn" title="لون خلفية مخصص" style="width:28px;height:28px"><input type="color" id="customTopLabelBgColor" value="#cc0000"></div>
+        <span style="color:#666;font-size:11px;margin-right:auto">لون الخلفية</span>
+      </div>
+    </div>
+
+    <!-- Source text (like دوري أبطال أوروبا) -->
+    <div>
+      <div class="section-label">📰 مصدر الخبر / النص السفلي</div>
+      <textarea class="news-input" id="sourceText" placeholder="مثال: دوري أبطال أوروبا" rows="1" style="min-height:48px;font-size:13px"></textarea>
+      <div class="font-row" style="margin-top:8px">
+        <select class="select-styled" id="sourceFontSelect">
+          <option value="Cairo">Cairo</option>
+          <option value="Tajawal">Tajawal</option>
+          <option value="Almarai">Almarai</option>
+          <option value="Noto Kufi Arabic">Noto Kufi</option>
+          <option value="Readex Pro">Readex Pro</option>
+          <option value="IBM Plex Sans Arabic">IBM Plex Arabic</option>
+          <option value="Reem Kufi">Reem Kufi</option>
+        </select>
+        <input type="range" id="sourceSizeSlider" min="16" max="60" value="28" style="flex:1">
+      </div>
+      <div class="color-row" style="margin-top:8px">
+        <div class="src-swatch active" style="background:#888888;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid #fff;flex-shrink:0" data-color="#888888"></div>
+        <div class="src-swatch" style="background:#1a1a1a;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#1a1a1a"></div>
+        <div class="src-swatch" style="background:#cc0000;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#cc0000"></div>
+        <div class="src-swatch" style="background:#d4a843;width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;flex-shrink:0" data-color="#d4a843"></div>
+        <div class="color-picker-btn" title="لون مخصص" style="width:28px;height:28px"><input type="color" id="customSourceColor" value="#888888"></div>
+        <span style="color:#666;font-size:11px;margin-right:auto">لون النص</span>
+      </div>
+    </div>
+
+    <!-- Highlight color for special word -->
+    <div>
+      <div class="section-label">🎨 لون الكلمة المميزة (ضع * قبل الكلمة)</div>
+      <div class="color-row">
+        <div class="hl-swatch active" style="background:#cc0000" data-color="#cc0000"></div>
+        <div class="hl-swatch" style="background:#d4a843" data-color="#d4a843"></div>
+        <div class="hl-swatch" style="background:#0055aa" data-color="#0055aa"></div>
+        <div class="hl-swatch" style="background:#007700" data-color="#007700"></div>
+        <div class="hl-swatch" style="background:#ff6600" data-color="#ff6600"></div>
+        <div class="hl-swatch" style="background:#9900cc" data-color="#9900cc"></div>
+        <div class="color-picker-btn" title="لون مخصص">
+          <input type="color" id="customHlColor" value="#cc0000">
+        </div>
+        <span style="color:#666;font-size:11px;margin-right:auto">لون التمييز</span>
+      </div>
+      <p style="color:#555;font-size:11px;margin-top:6px;direction:rtl">مثال: دوري أبطال *أوربا — ضع * قبل الكلمة لتلوينها</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-row">
+      <button class="btn-primary" id="generateBtn">✨ معاينة</button>
+      <button class="btn-secondary" id="downloadBtn" disabled>⬇️ تحميل</button>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- PREVIEW -->
+  <div class="preview-section">
+    <div class="preview-title">◉ المعاينة المباشرة</div>
+    <div class="canvas-wrapper">
+      <canvas id="previewCanvas" width="1080" height="1350"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">تم التحميل بنجاح ✓</div>
+
+<script>
+// State
+let newsImage = null;
+let logoImage = null;
+let selectedColor = '#1a1a1a';
+let highlightColor = '#cc0000';
+let logoPosition = 'right';
+let currentFont = 'Cairo';
+let fontSize = 38;
+let sourceFont = 'Cairo';
+let sourceFontSize = 28;
+let sourceColor = '#888888';
+let topLabelFont = 'Cairo';
+let topLabelFontSize = 32;
+let topLabelColor = '#ffffff';
+let topLabelBgColor = 'transparent';
+
+// Refs
+const canvas = document.getElementById('previewCanvas');
+const ctx = canvas.getContext('2d');
+const W = 1080, H = 1350;
+canvas.width = W;
+canvas.height = H;
+
+// Initial placeholder draw
+drawCard();
+
+// ===== FILE UPLOADS =====
+document.getElementById('newsImgInput').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => { newsImage = img; updateLabel('newsImgBtn','newsImgLabel','✅ صورة الخبر'); drawCard(); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(f);
+});
+
+document.getElementById('logoInput').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => { logoImage = img; updateLabel('logoBtn','logoLabel','✅ الشعار'); drawCard(); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(f);
+});
+
+function updateLabel(btnId, labelId, text) {
+  document.getElementById(btnId).classList.add('has-image');
+  document.getElementById(labelId).textContent = text;
+}
+
+// ===== TEXT INPUT =====
+document.getElementById('newsText').addEventListener('input', drawCard);
+
+// ===== FONT =====
+document.getElementById('fontSelect').addEventListener('change', e => {
+  currentFont = e.target.value;
+  drawCard();
+});
+
+// ===== FONT SIZE =====
+document.getElementById('fontSizeSlider').addEventListener('input', e => {
+  fontSize = parseInt(e.target.value);
+  drawCard();
+});
+
+// ===== COLORS =====
+document.querySelectorAll('.color-swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    document.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    selectedColor = s.dataset.color;
+    drawCard();
+  });
+});
+document.getElementById('customColor').addEventListener('input', e => {
+  selectedColor = e.target.value;
+  document.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('active'));
+  drawCard();
+});
+
+// ===== HIGHLIGHT COLOR =====
+document.querySelectorAll('.hl-swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    document.querySelectorAll('.hl-swatch').forEach(x => x.classList.remove('active'));
+    s.classList.add('active');
+    highlightColor = s.dataset.color;
+    drawCard();
+  });
+});
+document.getElementById('customHlColor').addEventListener('input', e => {
+  highlightColor = e.target.value;
+  document.querySelectorAll('.hl-swatch').forEach(x => x.classList.remove('active'));
+  drawCard();
+});
+
+// ===== LOGO POSITION =====
+document.querySelectorAll('.pos-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.pos-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    logoPosition = b.dataset.pos;
+    drawCard();
+  });
+});
+
+// ===== GENERATE & DOWNLOAD =====
+document.getElementById('generateBtn').addEventListener('click', () => {
+  drawCard();
+  document.getElementById('downloadBtn').disabled = false;
+  document.querySelector('.canvas-wrapper').scrollIntoView({behavior:'smooth', block:'start'});
+});
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'news-card.png';
+  link.href = canvas.toDataURL('image/png', 1.0);
+  link.click();
+  showToast('تم تحميل الصورة بنجاح ✓');
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===== DRAW CARD =====
+function drawCard() {
+  ctx.clearRect(0, 0, W, H);
+
+  // === RED BACKGROUND ===
+  const bgGrad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.9);
+  bgGrad.addColorStop(0, '#dd0000');
+  bgGrad.addColorStop(0.5, '#cc0000');
+  bgGrad.addColorStop(1, '#880000');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // BG texture dots
+  ctx.save();
+  ctx.globalAlpha = 0.06;
+  for (let i = 0; i < 120; i++) {
+    const x = (i % 12) * 95 + 30;
+    const y = Math.floor(i / 12) * 95 + 30;
+    ctx.beginPath();
+    ctx.arc(x, y, 18, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff4444';
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // === MAIN WHITE CARD ===
+  const cardX = 48, cardY = 80, cardW = W - 96, cardH = H - 160;
+  const r = 60;
+
+  // Card shadow
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur = 60;
+  ctx.shadowOffsetY = 20;
+  roundRect(ctx, cardX, cardY, cardW, cardH, r);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.restore();
+
+  // Card base
+  ctx.save();
+  roundRect(ctx, cardX, cardY, cardW, cardH, r);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.restore();
+
+  // Gold border on card
+  ctx.save();
+  roundRect(ctx, cardX - 3, cardY - 3, cardW + 6, cardH + 6, r + 2);
+  ctx.strokeStyle = 'rgba(212,168,67,0.5)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.restore();
+
+  // === NEWS IMAGE AREA (inside card, upper portion) ===
+  const imgAreaX = cardX + 28;
+  const imgAreaY = cardY + 70;
+  const imgAreaW = cardW - 56;
+  const imgAreaH = cardH * 0.52;
+
+  if (newsImage) {
+    // Clip to rounded rect for image
+    ctx.save();
+    roundRect(ctx, imgAreaX, imgAreaY, imgAreaW, imgAreaH, 30);
+    ctx.clip();
+
+    // Cover fit
+    const scale = Math.max(imgAreaW / newsImage.width, imgAreaH / newsImage.height);
+    const sw = newsImage.width * scale;
+    const sh = newsImage.height * scale;
+    const sx = imgAreaX + (imgAreaW - sw) / 2;
+    const sy = imgAreaY + (imgAreaH - sh) / 2;
+    ctx.drawImage(newsImage, sx, sy, sw, sh);
+
+    // subtle vignette on image
+    const vign = ctx.createLinearGradient(imgAreaX, imgAreaY + imgAreaH * 0.6, imgAreaX, imgAreaY + imgAreaH);
+    vign.addColorStop(0, 'rgba(0,0,0,0)');
+    vign.addColorStop(1, 'rgba(0,0,0,0.3)');
+    ctx.fillStyle = vign;
+    ctx.fillRect(imgAreaX, imgAreaY, imgAreaW, imgAreaH);
+
+    ctx.restore();
+
+    // Image border
+    ctx.save();
+    roundRect(ctx, imgAreaX, imgAreaY, imgAreaW, imgAreaH, 30);
+    ctx.strokeStyle = 'rgba(204,0,0,0.3)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+  } else {
+    // Placeholder
+    ctx.save();
+    roundRect(ctx, imgAreaX, imgAreaY, imgAreaW, imgAreaH, 30);
+    ctx.fillStyle = '#f5f5f5';
+    ctx.fill();
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = '80px Cairo';
+    ctx.fillStyle = '#ddd';
+    ctx.textAlign = 'center';
+    ctx.fillText('🖼️', imgAreaX + imgAreaW/2, imgAreaY + imgAreaH/2 + 30);
+    ctx.font = 'bold 32px Cairo';
+    ctx.fillStyle = '#ccc';
+    ctx.fillText('ارفع صورة الخبر', imgAreaX + imgAreaW/2, imgAreaY + imgAreaH/2 + 90);
+    ctx.restore();
+  }
+
+  // === TEXT AREA (bottom portion of card) ===
+  const textBoxX = cardX + 28;
+  const textBoxY = imgAreaY + imgAreaH + 24;
+  const textBoxW = cardW - 56;
+  const textBoxH = cardH - (textBoxY - cardY) - 36;
+
+  // Text box background
+  ctx.save();
+  roundRect(ctx, textBoxX, textBoxY, textBoxW, textBoxH, 24);
+  ctx.fillStyle = '#f7f7f8';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(204,0,0,0.18)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.restore();
+
+  // Draw text
+  const newsText = document.getElementById('newsText').value.trim() || 'اكتب نص الخبر هنا...';
+  drawWrappedText(ctx, newsText, textBoxX + 28, textBoxY, textBoxW - 56, textBoxH, currentFont, fontSize, selectedColor, highlightColor);
+
+  // === LOGO (moved down so it doesn't touch the white card edge) ===
+  const logoSize = 230;
+  const logoY = cardY + 50;
+  let logoX;
+  if (logoPosition === 'right') {
+    logoX = cardX + cardW - logoSize - 20;
+  } else {
+    logoX = cardX + 20;
+  }
+  if (logoImage) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(logoX + logoSize/2, logoY + logoSize/2, logoSize/2, 0, Math.PI*2);
+    ctx.clip();
+    const lscale = Math.min(logoSize / logoImage.width, logoSize / logoImage.height);
+    const lw = logoImage.width * lscale;
+    const lh = logoImage.height * lscale;
+    ctx.drawImage(logoImage, logoX + (logoSize-lw)/2, logoY + (logoSize-lh)/2, lw, lh);
+    ctx.restore();
+  }
+
+  // === TOP LABEL (like SSC) — opposite side from logo, same vertical level ===
+  const topLabelVal = document.getElementById('topLabelText').value.trim();
+  if (topLabelVal) {
+    const labelCenterY = logoY + logoSize / 2;
+    const tlFs = topLabelFontSize * (1080 / 400);
+    ctx.save();
+    ctx.font = `bold ${tlFs}px "${topLabelFont}"`;
+    const tlMetrics = ctx.measureText(topLabelVal);
+    const tlTextW = tlMetrics.width;
+    const tlPadX = tlFs * 0.5;
+    const tlPadY = tlFs * 0.35;
+    const tlBgH = tlFs + tlPadY * 2;
+    const tlBgW = tlTextW + tlPadX * 2;
+    const tlBgR = tlFs * 0.25;
+    let tlTextX, tlBgX;
+    if (logoPosition === 'right') {
+      tlBgX = cardX + 48;
+      tlTextX = tlBgX + tlPadX;
+    } else {
+      tlBgX = cardX + cardW - 48 - tlBgW;
+      tlTextX = tlBgX + tlBgW - tlPadX;
+    }
+    const tlBgY = labelCenterY - tlBgH / 2;
+    // Draw background if not transparent
+    if (topLabelBgColor && topLabelBgColor !== 'transparent') {
+      ctx.beginPath();
+      ctx.moveTo(tlBgX + tlBgR, tlBgY);
+      ctx.lineTo(tlBgX + tlBgW - tlBgR, tlBgY);
+      ctx.quadraticCurveTo(tlBgX + tlBgW, tlBgY, tlBgX + tlBgW, tlBgY + tlBgR);
+      ctx.lineTo(tlBgX + tlBgW, tlBgY + tlBgH - tlBgR);
+      ctx.quadraticCurveTo(tlBgX + tlBgW, tlBgY + tlBgH, tlBgX + tlBgW - tlBgR, tlBgY + tlBgH);
+      ctx.lineTo(tlBgX + tlBgR, tlBgY + tlBgH);
+      ctx.quadraticCurveTo(tlBgX, tlBgY + tlBgH, tlBgX, tlBgY + tlBgH - tlBgR);
+      ctx.lineTo(tlBgX, tlBgY + tlBgR);
+      ctx.quadraticCurveTo(tlBgX, tlBgY, tlBgX + tlBgR, tlBgY);
+      ctx.closePath();
+      ctx.fillStyle = topLabelBgColor;
+      ctx.fill();
+    }
+    // Draw text
+    ctx.fillStyle = topLabelColor;
+    ctx.textBaseline = 'middle';
+    if (logoPosition === 'right') {
+      ctx.textAlign = 'left';
+      ctx.fillText(topLabelVal, tlTextX, labelCenterY);
+    } else {
+      ctx.textAlign = 'right';
+      ctx.fillText(topLabelVal, tlTextX, labelCenterY);
+    }
+    ctx.restore();
+  }
+
+  // === SOURCE TEXT (bottom of text area, smaller font) ===
+  const sourceVal = document.getElementById('sourceText').value.trim();
+  if (sourceVal) {
+    const srcFs = sourceFontSize * (1080 / 400);
+    ctx.save();
+    ctx.font = `${srcFs}px "${sourceFont}"`;
+    ctx.fillStyle = sourceColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.direction = 'rtl';
+    const srcY = cardY + cardH - 44;
+    ctx.fillText(sourceVal, W / 2, srcY);
+    ctx.restore();
+  }
+
+  // Enable download
+  document.getElementById('downloadBtn').disabled = false;
+}
+
+// ===== WRAPPED TEXT FUNCTION =====
+function drawWrappedText(ctx, text, x, y, maxW, boxH, fontFamily, baseFontSize, color, hlColor) {
+  if (!text) return;
+
+  ctx.save();
+  ctx.textAlign = 'right';
+  ctx.direction = 'rtl';
+
+  let fs = baseFontSize * (1080 / 400);
+  let lineH = fs * 1.5;
+
+  // Auto-fit font size
+  let lines;
+  const plainText = text.replace(/\*/g, '');
+  while (fs > 28) {
+    ctx.font = `bold ${fs}px "${fontFamily}"`;
+    lines = wrapText(ctx, plainText, maxW);
+    const totalH = lines.length * lineH + 40;
+    if (totalH <= boxH - 20) break;
+    fs -= 4;
+    lineH = fs * 1.5;
+  }
+
+  // Re-wrap original text (with * markers) at final fs
+  ctx.font = `bold ${fs}px "${fontFamily}"`;
+  lines = wrapTextMarked(ctx, text, maxW);
+
+  const totalTextH = lines.length * lineH;
+  const startY = y + (boxH - totalTextH) / 2 + fs * 0.8;
+
+  lines.forEach((segments, i) => {
+    // segments is array of {text, highlight}
+    // Measure total line width to right-align properly
+    let totalLineW = 0;
+    segments.forEach(seg => {
+      ctx.font = `bold ${fs}px "${fontFamily}"`;
+      totalLineW += ctx.measureText(seg.text).width;
+    });
+
+    // Draw RTL: start from right edge, go left
+    let curX = x + maxW;
+    segments.forEach(seg => {
+      ctx.font = `bold ${fs}px "${fontFamily}"`;
+      const segW = ctx.measureText(seg.text).width;
+      ctx.fillStyle = seg.highlight ? hlColor : color;
+      ctx.fillText(seg.text, curX, startY + i * lineH);
+      curX -= segW;
+    });
+  });
+
+  ctx.restore();
+}
+
+function wrapTextMarked(ctx, text, maxW) {
+  // Split text into tokens preserving * markers
+  // Each token: {text, highlight}
+  const rawWords = text.split(' ');
+  const tokens = rawWords.map(w => {
+    if (w.startsWith('*') && w.length > 1) {
+      return { text: w.slice(1), highlight: true };
+    }
+    return { text: w, highlight: false };
+  });
+
+  const lines = [];
+  let currentTokens = [];
+  let currentWidth = 0;
+
+  for (let tok of tokens) {
+    const space = currentTokens.length > 0 ? ' ' : '';
+    const testW = ctx.measureText(space + tok.text).width;
+    if (currentWidth + testW > maxW && currentTokens.length > 0) {
+      lines.push(currentTokens);
+      currentTokens = [tok];
+      currentWidth = ctx.measureText(tok.text).width;
+    } else {
+      if (currentTokens.length > 0) {
+        currentTokens = [...currentTokens, { text: ' ', highlight: false }, tok];
+        currentWidth += ctx.measureText(' ' + tok.text).width;
+      } else {
+        currentTokens = [tok];
+        currentWidth = ctx.measureText(tok.text).width;
+      }
+    }
+  }
+  if (currentTokens.length > 0) lines.push(currentTokens);
+  return lines;
+}
+
+function wrapText(ctx, text, maxW) {
+  const words = text.split(' ');
+  const lines = [];
+  let current = '';
+
+  for (let w of words) {
+    const test = current ? current + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && current) {
+      lines.push(current);
+      current = w;
+    } else {
+      current = test;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+// ===== ROUNDED RECT HELPER =====
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// Auto-draw on any change
+document.getElementById('fontSizeSlider').addEventListener('input', drawCard);
+
+// ===== SOURCE TEXT =====
+document.getElementById('sourceText').addEventListener('input', drawCard);
+document.getElementById('sourceFontSelect').addEventListener('change', e => { sourceFont = e.target.value; drawCard(); });
+document.getElementById('sourceSizeSlider').addEventListener('input', e => { sourceFontSize = parseInt(e.target.value); drawCard(); });
+document.querySelectorAll('.src-swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    document.querySelectorAll('.src-swatch').forEach(x => x.style.borderColor = 'transparent');
+    s.style.borderColor = '#fff';
+    sourceColor = s.dataset.color;
+    drawCard();
+  });
+});
+document.getElementById('customSourceColor').addEventListener('input', e => {
+  sourceColor = e.target.value;
+  document.querySelectorAll('.src-swatch').forEach(x => x.style.borderColor = 'transparent');
+  drawCard();
+});
+
+// ===== TOP LABEL =====
+document.getElementById('topLabelText').addEventListener('input', drawCard);
+document.getElementById('topLabelFont').addEventListener('change', e => { topLabelFont = e.target.value; drawCard(); });
+document.getElementById('topLabelSizeSlider').addEventListener('input', e => { topLabelFontSize = parseInt(e.target.value); drawCard(); });
+document.querySelectorAll('.tl-swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    document.querySelectorAll('.tl-swatch').forEach(x => x.style.borderColor = 'transparent');
+    s.style.borderColor = '#fff';
+    topLabelColor = s.dataset.color;
+    drawCard();
+  });
+});
+document.getElementById('customTopLabelColor').addEventListener('input', e => {
+  topLabelColor = e.target.value;
+  document.querySelectorAll('.tl-swatch').forEach(x => x.style.borderColor = 'transparent');
+  drawCard();
+});
+document.querySelectorAll('.tlbg-swatch').forEach(s => {
+  s.addEventListener('click', () => {
+    document.querySelectorAll('.tlbg-swatch').forEach(x => x.style.borderColor = 'transparent');
+    s.style.borderColor = '#fff';
+    topLabelBgColor = s.dataset.color;
+    drawCard();
+  });
+});
+document.getElementById('customTopLabelBgColor').addEventListener('input', e => {
+  topLabelBgColor = e.target.value;
+  document.querySelectorAll('.tlbg-swatch').forEach(x => x.style.borderColor = 'transparent');
+  drawCard();
+});
+
+
+</script>
+</body>
+</html>
